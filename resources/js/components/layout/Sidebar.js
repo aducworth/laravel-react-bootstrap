@@ -18,6 +18,7 @@ function Sidebar(props) {
         <Sidenav.Body>
           <Nav>
             <NavLink to="/" eventKey="1" icon={<Icon icon="dashboard" />}>Dashboard</NavLink>
+            <NavLink to="/resource/todo" eventKey="2" icon={<Icon icon="list" />}>Todos</NavLink>
             <Nav.Item eventKey="2" icon={<Icon icon="group" />}>
               User Group
             </Nav.Item>

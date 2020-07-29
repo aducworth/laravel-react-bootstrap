@@ -1,6 +1,7 @@
 import Home from '../pages/Home';
 import Dashboard from '../pages/Dashboard';
 import Register from '../pages/Register';
+import Resource from '../pages/Resource';
 import ForgotPassword from '../pages/ForgotPassword';
 import ResetPassword from '../pages/ResetPassword';
 import Archive from '../pages/Archive';
@@ -12,6 +13,13 @@ const routes = [
     exact: true,
     auth: true,
     component: Dashboard,
+    fallback: Home,
+  },
+  {
+    path: '/resource/:resource',
+    exact: true,
+    auth: true,
+    component: Resource,
     fallback: Home,
   },
   {
