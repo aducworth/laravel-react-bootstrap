@@ -1,0 +1,68 @@
+version: '3'
+
+networks:
+  laravel:
+
+services:
+  nginx:
+    image: nginx:stable-alpine
+    container_name: nginx
+    ports:
+      - "80:80"
+    volumes:
+      - ../:/var/www
+      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf
+    depends_on:
+      - php
+      - mysql
+    networks:
+      - laravel
+  mysql:
+    image: mysql:5.7.22
+    container_name: mysql
+    restart: unless-stopped
+    tty: true
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_DATABASE: laravel_react
+      MYSQL_USER: user
+      MYSQL_PASSWORD: secret
+      MYSQL_ROOT_PASSWORD: secret
+      SERVICE_TAGS: dev
+      SERVICE_NAME: mysql
+    networks:
+      - laravel
+  php:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: php
+    volumes:
+      - ../:/var/www
+    ports:
+      - "9000:9000"
+    environment:
+      - APP_DEBUG=true
+      - APP_ENV=local
+      - APP_KEY=2mGvlWb1McMFIETU2FTIOACTyNWQXe8u
+      - 'APP_NAME=Laravel React Bootstrap LOCAL'
+      - 'APP_URL=http://localhost'
+      - BROADCAST_DRIVER=log
+      - CACHE_DRIVER=file
+      - DB_CONNECTION=mysql
+      - DB_DATABASE=laravel_react
+      - DB_HOST=mysql
+      - DB_PASSWORD=secret
+      - DB_PORT=3306
+      - DB_USERNAME=root
+      - MAIL_DRIVER=log
+      - MAIL_HOST=smtp.mailtrap.io
+      - MAIL_PORT=2525
+      - MAIL_USERNAME=null
+      - MAIL_PASSWORD=null
+      - MAIL_ENCRYPTION=null
+      - JWT_SECRET=Aiq7yaTQueMCwOlc2u54nxikF9bG3XR8ixek4x226xOFRaxn4YQBsP7XuOZSpbVg
+    networks:
+      - laravel
+    working_dir: /var/www
