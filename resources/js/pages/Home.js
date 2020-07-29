@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
 import { Link, Redirect } from 'react-router-dom';
-import ReeValidate from 'ree-validate';
 import classNames from 'classnames';
 import AuthService from '../services';
 
@@ -16,57 +15,22 @@ function Home(props) {
     message: '',
   });
 
-  const validator = new ReeValidate({
-    email: 'required|email',
-    password: 'required|min:6',
-  });
-
   const handleChange = (e) => {
     const { name, value } = e.target;
     setForm({...form, ...{ [name]: value }});
 
-    // If a field has a validation error, we'll clear it when corrected.
+    // If a field has a validation error, we'll clear it
     if (name in errors) {
-      const validation = validator.errors;
-      validator.validate(name, value).then(() => {
-        if (!validation.has(name)) {
-          delete errors[name];
-          setErrors(errors);
-        }
-      });
+      setErrors({...errors, ...{[name]: null}});
     }
-  };
-
-  const handleBlur = (e) => {
-    const { name, value } = e.target;
-
-    // Avoid validation until input has a value.
-    if (value === '') {
-      return;
-    }
-
-    const validation = validator.errors;
-    validator.validate(name, value).then(() => {
-      if (validation.has(name)) {
-        errors[name] = validation.first(name);
-        setErrors(errors);
-      }
-    });
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    validator.validateAll(form).then((success) => {
-      if (success) {
-        setLoading(true);
-        submit(form);
-      }
-    });
-  };
-
-  const submit = (credentials) => {
-    props.dispatch(AuthService.login(credentials)).catch((err) => {
+    setLoading(true);
+    props.dispatch(AuthService.login(form)).catch((err) => {
       const errors = Object.values(err.errors);
+      console.log('errors', errors)
       errors.join(' ');
       setResponse({
         error: true,
@@ -135,7 +99,6 @@ function Home(props) {
                         placeholder="Enter email"
                         required
                         onChange={handleChange}
-                        onBlur={handleBlur}
                         disabled={loading}
                       />
 
@@ -156,7 +119,6 @@ function Home(props) {
                         placeholder="Enter password"
                         required
                         onChange={handleChange}
-                        onBlur={handleBlur}
                         disabled={loading}
                       />
                       {'password' in errors && (

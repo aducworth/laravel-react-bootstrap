@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
 import { Link, Redirect } from 'react-router-dom';
-import ReeValidate from 'ree-validate';
 import classNames from 'classnames';
 import AuthService from '../services';
 
@@ -22,44 +21,14 @@ function Register(props) {
   });
   const [success, setSuccess] = useState(false);
 
-  const validator = new ReeValidate({
-    name: 'required|min:3',
-    email: 'required|email',
-    password: 'required|min:6',
-    password_confirmation: 'required|min:6',
-  });
-
   const handleChange = (e) => {
     const { name, value } = e.target;
     setForm({...form, ...{ [name]: value }});
 
     // If a field has a validation error, we'll clear it when corrected.
     if (name in errors) {
-      const validation = validator.errors;
-      validator.validate(name, value).then(() => {
-        if (!validation.has(name)) {
-          delete errors[name];
-          setErrors(errors);
-        }
-      });
+      setErrors({...errors, ...{[name]: null}});
     }
-  };
-
-  const handleBlur = (e) => {
-    const { name, value } = e.target;
-    const validation = validator.errors;
-
-    // Avoid validation until input has a value.
-    if (value === '') {
-      return;
-    }
-
-    validator.validate(name, value).then(() => {
-      if (validation.has(name)) {
-        errors[name] = validation.first(name);
-        setErrors(errors);
-      }
-    });
   };
 
   const handleSubmit = (e) => {
@@ -67,18 +36,10 @@ function Register(props) {
 
     // Set response state back to default.
     setResponse({ response: { error: false, message: '' } });
+    setLoading(true);
 
-    validator.validateAll(form).then((success) => {
-      if (success) {
-        setLoading(true);
-        submit(form);
-      }
-    });
-  };
-
-  const submit = (credentials) => {
     props
-      .dispatch(AuthService.register(credentials))
+      .dispatch(AuthService.register(form))
       .then(() => {
         setLoading(false);
         setSuccess(true);
@@ -92,7 +53,7 @@ function Register(props) {
         });
         setLoading(false);
       });
-  }
+  };
 
   // If user is already authenticated we redirect to dashboard.
   if (props.isAuthenticated) {
@@ -149,7 +110,6 @@ function Register(props) {
                           placeholder="Enter name"
                           required
                           onChange={handleChange}
-                          onBlur={handleBlur}
                           disabled={loading}
                         />
 
@@ -172,7 +132,6 @@ function Register(props) {
                           placeholder="Enter email"
                           required
                           onChange={handleChange}
-                          onBlur={handleBlur}
                           disabled={loading}
                         />
 
@@ -195,7 +154,6 @@ function Register(props) {
                           placeholder="Enter password"
                           required
                           onChange={handleChange}
-                          onBlur={handleBlur}
                           disabled={loading}
                         />
                         {'password' in errors && (
@@ -219,7 +177,6 @@ function Register(props) {
                           placeholder="Confirm password"
                           required
                           onChange={handleChange}
-                          onBlur={handleBlur}
                           disabled={loading}
                         />
                         {'password_confirmation' in errors && (

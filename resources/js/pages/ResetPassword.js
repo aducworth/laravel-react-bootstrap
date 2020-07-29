@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
 import { Redirect } from 'react-router-dom';
-import ReeValidate from 'ree-validate';
 import classNames from 'classnames';
 import AuthService from '../services';
 
@@ -38,46 +37,14 @@ function ResetPassword(props) {
   });
   const [success, setSuccess] = useState(false);
 
-
-  // @TODO Password confirmation validation.
-  const validator = new ReeValidate({
-    password: 'required|min:6',
-    password_confirmation: 'required|min:6',
-    id: 'required',
-    token: 'required',
-  });
-
   const handleChange = (e) => {
     const { name, value } = e.target;
     setForm({...form, ...{ [name]: value }});
 
-    // If a field has a validation error, we'll clear it when corrected.
+    // If a field has a validation error, we'll clear it
     if (name in errors) {
-      const validation = validator.errors;
-      validator.validate(name, value).then(() => {
-        if (!validation.has(name)) {
-          delete errors[name];
-          setErrors(errors);
-        }
-      });
+      setErrors({...errors, ...{[name]: null}});
     }
-  };
-
-  const handleBlur = (e) => {
-    const { name, value } = e.target;
-    const validation = validator.errors;
-
-    // Avoid validation until input has a value.
-    if (value === '') {
-      return;
-    }
-
-    validator.validate(name, value).then(() => {
-      if (validation.has(name)) {
-        errors[name] = validation.first(name);
-        setErrors(errors);
-      }
-    });
   };
 
   const handleSubmit = (e) => {
@@ -159,7 +126,6 @@ function ResetPassword(props) {
                           placeholder="Enter password"
                           required
                           onChange={handleChange}
-                          onBlur={handleBlur}
                         />
                         {'password' in errors && (
                           <div className="invalid-feedback">
@@ -182,7 +148,6 @@ function ResetPassword(props) {
                           placeholder="Confirm password"
                           required
                           onChange={handleChange}
-                          onBlur={handleBlur}
                         />
                         {'password_confirmation' in errors && (
                           <div className="invalid-feedback">

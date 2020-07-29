@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
 import { Redirect } from 'react-router-dom';
-import ReeValidate from 'ree-validate';
 import classNames from 'classnames';
 import AuthService from '../services';
 
@@ -18,59 +17,24 @@ function ForgotPassword(props) {
   const [success, setSuccess] = useState(false);
 
 
-  const validator = new ReeValidate({
-    email: 'required|email',
-  });
-
   const handleChange = (e) => {
     const { name, value } = e.target;
     setForm({...form, ...{ [name]: value }});
 
-    // If a field has a validation error, we'll clear it when corrected.
+    // If a field has a validation error, we'll clear it
     if (name in errors) {
-      const validation = validator.errors;
-      validator.validate(name, value).then(() => {
-        if (!validation.has(name)) {
-          delete errors[name];
-          setErrors(errors);
-        }
-      });
+      setErrors({...errors, ...{[name]: null}});
     }
-  };
-
-  const handleBlur = (e) => {
-    const { name, value } = e.target;
-    const validation = validator.errors;
-
-    // Avoid validation until input has a value.
-    if (value === '') {
-      return;
-    }
-
-    validator.validate(name, value).then(() => {
-      if (validation.has(name)) {
-        errors[name] = validation.first(name);
-        setErrors(errors);
-      }
-    });
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
     // Set response state back to default.
     setResponse({ response: { error: false, message: '' } });
+    setLoading(true);
 
-    validator.validateAll(form).then((success) => {
-      if (success) {
-        setLoading(true);
-        submit(form);
-      }
-    });
-  };
-
-  const submit = (credentials) => {
     props
-      .dispatch(AuthService.resetPassword(credentials))
+      .dispatch(AuthService.resetPassword(form))
       .then((res) => {
         setResponse({
           error: false,
@@ -88,7 +52,7 @@ function ForgotPassword(props) {
         });
         setLoading(false);
       });
-  }
+  };
 
   // If user is already authenticated we redirect to entry location.
   const { from } = props.location.state || { from: { pathname: '/' } };
@@ -143,7 +107,6 @@ function ForgotPassword(props) {
                           placeholder="Enter email"
                           required
                           onChange={handleChange}
-                          onBlur={handleBlur}
                           disabled={loading}
                         />
 
