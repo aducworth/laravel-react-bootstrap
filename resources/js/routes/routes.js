@@ -1,5 +1,4 @@
 import Home from '../pages/Home';
-import Login from '../pages/Login';
 import Dashboard from '../pages/Dashboard';
 import Register from '../pages/Register';
 import ForgotPassword from '../pages/ForgotPassword';
@@ -14,12 +13,6 @@ const routes = [
     auth: true,
     component: Dashboard,
     fallback: Home,
-  },
-  {
-    path: '/login',
-    exact: true,
-    auth: false,
-    component: Login,
   },
   {
     path: '/register',
