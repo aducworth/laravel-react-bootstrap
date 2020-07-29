@@ -1,77 +1,57 @@
-import React, { Component } from 'react';
+import React, { useEffect, useState } from 'react';
 import { connect } from 'react-redux';
 import classNames from 'classnames';
 import Http from '../Http';
 
-class Archive extends Component {
-  constructor(props) {
-    super(props);
+function Archive(props) {
 
-    this.state = {
-      loading: true,
-      data: {},
-      apiMore: '',
-      moreLoaded: false,
-      error: false,
-    };
+  const [loading, setLoading] = useState(false);
+  const [data, setData] = useState([]);
+  const [apiMore, setApiMore] = useState('');
+  const [moreLoaded, setMoreLoaded] = useState(false);
+  const [error, setError] = useState(false);
 
-    // API Endpoint
-    this.api = '/api/v1/todo';
-  }
+  const api = '/api/v1/todo';
 
-  componentDidMount() {
-    Http.get(this.api)
+  useEffect(() => {
+    Http.get(api)
       .then((response) => {
         const { data } = response.data;
         const apiMore = response.data.links.next;
-        this.setState({
-          data,
-          apiMore,
-          loading: false,
-          error: false,
-        });
+        setData(data);
+        setApiMore(apiMore);
+        setLoading(false);
+        setError(false);
       })
       .catch(() => {
-        this.setState({
-          error: 'Unable to fetch data.',
-        });
+        setError('Unable to fetch data.');
       });
-  }
+  }, []);
 
-  loadMore = () => {
-    this.setState({ loading: true });
-    Http.get(this.state.apiMore)
+  const loadMore = () => {
+    setLoading(true);
+    Http.get(apiMore)
       .then((response) => {
-        const { data } = response.data;
         const apiMore = response.data.links.next;
-        const dataMore = this.state.data.concat(data);
-        this.setState({
-          data: dataMore,
-          apiMore,
-          loading: false,
-          moreLoaded: true,
-          error: false,
-        });
+        setData([...data, ...response.data]);
+        setApiMore(apiMore);
+        setLoading(false);
+        setMoreLoaded(true);
+        setError(false);
       })
       .catch(() => {
-        this.setState({
-          error: 'Unable to fetch data.',
-        });
+        setError('Unable to fetch data.');
       });
   };
 
-  deleteTodo = (e) => {
-    const { key } = e.target.dataset;
-    const { data: todos } = this.state;
-
-    Http.delete(`${this.api}/${key}`)
+  const deleteTodo = (id) => {
+    Http.delete(`${api}/${id}`)
       .then((response) => {
         if (response.status === 204) {
-          const index = todos.findIndex(
-            (todo) => parseInt(todo.id, 10) === parseInt(key, 10),
+          const updatedTodos = data.filter(
+            (todo) => todo.id !== id,
           );
-          const update = [...todos.slice(0, index), ...todos.slice(index + 1)];
-          this.setState({ data: update });
+          setData(updatedTodos);
         }
       })
       .catch((error) => {
@@ -79,69 +59,63 @@ class Archive extends Component {
       });
   };
 
-  render() {
-    const { loading, error, apiMore } = this.state;
-    const todos = Array.from(this.state.data);
+  return (
+    <div className="container py-5">
+      <h1 className="text-center mb-4">To Do Archive</h1>
 
-    return (
-      <div className="container py-5">
-        <h1 className="text-center mb-4">To Do Archive</h1>
+      {error && (
+        <div className="text-center">
+          <p>{error}</p>
+        </div>
+      )}
 
-        {error && (
-          <div className="text-center">
-            <p>{error}</p>
-          </div>
-        )}
-
-        <table className="table">
-          <tbody>
-            <tr>
-              <th>Time</th>
-              <th>To Do</th>
-              <th>Status</th>
-              <th>Action</th>
+      <table className="table">
+        <tbody>
+          <tr>
+            <th>Time</th>
+            <th>To Do</th>
+            <th>Status</th>
+            <th>Action</th>
+          </tr>
+          {data.map((todo) => (
+            <tr key={todo.id}>
+              <td>{todo.created_at}</td>
+              <td>{todo.value}</td>
+              <td>{todo.status}</td>
+              <td>
+                <button
+                  type="button"
+                  className="btn btn-secondary"
+                  onClick={() => deleteTodo(todo.id)}
+                >
+                  Delete
+                </button>
+              </td>
             </tr>
-            {todos.map((todo) => (
-              <tr key={todo.id}>
-                <td>{todo.created_at}</td>
-                <td>{todo.value}</td>
-                <td>{todo.status}</td>
-                <td>
-                  <button
-                    type="button"
-                    className="btn btn-secondary"
-                    onClick={this.deleteTodo}
-                    data-key={todo.id}
-                  >
-                    Delete
-                  </button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+          ))}
+        </tbody>
+      </table>
 
-        {apiMore && (
-          <div className="text-center">
-            <button
-              className={classNames('btn btn-primary', {
-                'btn-loading': loading,
-              })}
-              onClick={this.loadMore}
-            >
-              Load More
-            </button>
-          </div>
-        )}
+      {apiMore && (
+        <div className="text-center">
+          <button
+            className={classNames('btn btn-primary', {
+              'btn-loading': loading,
+            })}
+            onClick={loadMore}
+          >
+            Load More
+          </button>
+        </div>
+      )}
 
-        {apiMore === null && this.state.moreLoaded === true && (
-          <div className="text-center">
-            <p>Everything loaded.</p>
-          </div>
-        )}
-      </div>
-    );
-  }
+      {apiMore === null && moreLoaded === true && (
+        <div className="text-center">
+          <p>Everything loaded.</p>
+        </div>
+      )}
+    </div>
+  );
 }
 
 const mapStateToProps = (state) => ({
